@@ -1,0 +1,15 @@
+{
+    "n": 20,
+    "sigma_list": [
+        0.0
+    ],
+    "m_list": [
+        200
+    ],
+    "n_seeds": 1,
+    "c_sample": 2.0,
+    "max_iter": 4000,
+    "test_size": 2000,
+    "mse_thresh": 0.1,
+    "rng_base": 42
+}
