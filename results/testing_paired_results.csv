@@ -1,0 +1,5 @@
+algorithm,n,m,sigma,seed,z,test_mse,runtime,recovered,conv_iter,weight_hamming,n_nodes
+Linear GP,20,500,0.0,0,119,0.0,0.32480371899964666,True,100,0,
+GP Bagging,20,500,0.0,0,,0.00777871826342791,876.812132735,,,,24579
+Linear GP,20,500,1.0,0,119,0.0,0.17364545300006284,True,150,0,
+GP Bagging,20,500,1.0,0,,0.08501008763626966,998.9681744630002,,,,24746

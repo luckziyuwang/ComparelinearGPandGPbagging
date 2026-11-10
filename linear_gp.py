@@ -24,28 +24,29 @@ import numpy as np
 import pandas as pd
 from itertools import groupby
 from math import comb
+from data import make_dataset
 
-def make_target(n: int, rng: np.random.Generator):
-    """
-    Sample the optimal weight vector w_OPT uniformly from {-1, +1}^n.
-    The target function is f_OPT(x) = Σ_{i=1}^{n} w_i · x_i.
-    """
-    return rng.choice([-1, 1], size=n)
+#def make_target(n: int, rng: np.random.Generator):
+#    """
+#    Sample the optimal weight vector w_OPT uniformly from {-1, +1}^n.
+#    The target function is f_OPT(x) = Σ_{i=1}^{n} w_i · x_i.
+#    """
+#    return rng.choice([-1, 1], size=n)
 
 # target linear function f_OPT(x)= Σ_{i=1}^{n} w_i · x_i
-def f_opt(x: np.ndarray, w_opt: np.ndarray):
-    return float(w_opt @ x)
+#def f_opt(x: np.ndarray, w_opt: np.ndarray):
+#    return float(w_opt @ x)
 
 # generate n bits with random weights belongs to {-1,1}
 # Returns array of shape (m, n)
-def generate_bitstrings(n: int, m: int, rng: np.random.Generator):
-    return rng.integers(0, 2, size=(m, n))
+#def generate_bitstrings(n: int, m: int, rng: np.random.Generator):
+#    return rng.integers(0, 2, size=(m, n))
 
 # assumption violation: add gaussian noise to clean targets
-def add_gaussian_noise(y_clean:np.ndarray, sigma: float, rng: np.random.Generator):
-    if sigma == 0.0:
-        return y_clean.copy()
-    return y_clean + rng.normal(loc=0.0, scale=sigma, size=y_clean.shape)
+#def add_gaussian_noise(y_clean:np.ndarray, sigma: float, rng: np.random.Generator):
+#    if sigma == 0.0:
+#        return y_clean.copy()
+#    return y_clean + rng.normal(loc=0.0, scale=sigma, size=y_clean.shape)
 
 # error function: ex(f, f_OPT) = |f(x) - f_OPT(x)| for single point
 def ex(x: np.ndarray, w: np.ndarray, y_target: float):
@@ -108,7 +109,6 @@ def linear_gp(n: int, z: int, w_opt: np.ndarray, X_train: np.ndarray, y_train: n
             w=w_prime
         # record snapshot for each 50 iterations
         if t%50==0:
-            current_mse=snapshot(t)
             current_mse = snapshot(t)
             if current_mse <= mse_thresh and not recovered:
                 recovered = True
@@ -151,22 +151,20 @@ def experiment(n: int=20, c_sample: float=2.0, sigma_list:list = None,
     for sigma in sigma_list:
         for m in m_list:
             for seed in range(n_seeds):
+
+                dataset = make_dataset(
+                    n = n,
+                    m = m,
+                    test_size = test_size,
+                    sigma = sigma,
+                    seed = rng_base + seed * 100,
+                )
+
                 rng = np.random.default_rng(rng_base+seed*100)
-                # true target weights
-                w_opt=make_target(n, rng)
-
-                # train data with noisy targets
-                X_train = generate_bitstrings(n, m, rng)
-                y_clean_tr = X_train @ w_opt
-                y_train = add_gaussian_noise(y_clean_tr, sigma, rng)
-
-                # clean test dataset which always noise-free
-                X_test = generate_bitstrings(n, test_size, rng)
-                y_test = X_test @ w_opt
 
                 # run algorithm 1
-                result = linear_gp(n, z, w_opt, X_train, y_train,
-                                   X_test, y_test, max_iter, mse_thresh, rng)
+                result = linear_gp(n, z, dataset.w_opt, dataset.X_train, dataset.y_train,
+                                   dataset.X_test, dataset.y_test, max_iter, mse_thresh, rng)
                 result.update({
                     "sigma": sigma, "m":m, "seed": seed,
                     "n": n, "z": z
@@ -185,7 +183,7 @@ def experiment(n: int=20, c_sample: float=2.0, sigma_list:list = None,
 def summarise(result: list):
     rows=[]
     key=lambda r:(r["sigma"], r["m"])
-    for (sigma, m), grp in groupby(sorted(results, key=key), key=key):
+    for (sigma, m), grp in groupby(sorted(result, key=key), key=key):
         grp=list(grp)
         mses = [r["final_mse"] for r in grp]
         recovs = [int(r["recovered"]) for r in grp]
